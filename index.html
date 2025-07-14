@@ -1,46 +1,100 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>BonHub</title>
-    <link rel="stylesheet" href="css/style.css">
+  <meta charset="UTF-8">
+  <title>Play MIDI with Nylon Guitar</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.35/Tone.min.js"></script>
 </head>
 <body>
-    <header>
-        <h1>Bôn Hub slương điếp xo tuộng pi̱ noọng</h1>
-    </header>
+  <h1>Play MIDI File with Nylon Guitar</h1>
+  <input type="file" id="midiInput" accept=".mid,.midi"><br><br>
+  <button id="playBtn">▶️ Play</button>
+  <button id="pauseBtn">⏸️ Pause</button>
+  <button id="stopBtn">⏹️ Stop</button>
 
-    <main>
-        <section class="video-container">
-            <h2>Featured Video</h2>
-            <div class="video-player">
-                <video width="640" height="360" controls>
-                    <source src="https://bonxdin.github.io/BonHub/videos/NKH-001.mp4" type="video/mp4">
-                    Your browser does not support the video tag.
-                </video>
-            </div>
-        </section>
+  <script type="module">
+    import { Midi } from "https://cdn.jsdelivr.net/npm/@tonejs/midi@2.0.27/+esm";
 
-        <section class="video-list">
-            <h2>More Videos</h2>
-            <div class="video-thumbnail">
-                <a href="https://bonxdin.github.io/BonHub/videos/NKH-002.mp4">
-                    <img src="thumbnail.jpg" alt="Video Thumbnail" width="320" height="180">
-                    <p>NKH-002 Nòn ím</p>
-                </a>
-            </div>
-            <div class="video-thumbnail">
-                <a href="https://bonxdin.github.io/BonHub/videos/NKH-003.mp4">
-                    <img src="thumbnail.jpg" alt="Video Thumbnail" width="320" height="180">
-                    <p>NKH-003 3 thuổi khẩu</p>
-                </a>
-            </div>
-        </section>
-    </main>
+    const midiInput = document.getElementById('midiInput');
+    const playBtn = document.getElementById('playBtn');
+    const pauseBtn = document.getElementById('pauseBtn');
+    const stopBtn = document.getElementById('stopBtn');
 
-    <footer>
-        <p>&copy; 2025 BonHub</p>
-    </footer>
+    let midiData = null;
+    let parts = [];
+    let samplerLoaded = false;
+
+    // Nylon guitar sample map (can be extended with more notes)
+    const nylonGuitar = new Tone.Sampler({
+      urls: {
+        "E3": "E3.mp3",
+        "G3": "G3.mp3",
+        "C4": "C4.mp3",
+        "E4": "E4.mp3",
+        "G4": "G4.mp3",
+        "C5": "C4.mp3",
+        "E5": "E4.mp3",
+        "G5": "G4.mp3",
+        "C6": "C4.mp3",
+        "E6": "E4.mp3",
+        "G6": "G4.mp3",
+      },
+      baseUrl: "https://gleitz.github.io/midi-js-soundfonts/FluidR3_GM/acoustic_guitar_nylon-mp3/",
+      onload: () => {
+        samplerLoaded = true;
+        console.log("Nylon guitar samples loaded.");
+      }
+    }).toDestination();
+
+    midiInput.addEventListener('change', async (e) => {
+      const file = e.target.files[0];
+      if (!file) return;
+
+      const arrayBuffer = await file.arrayBuffer();
+      midiData = new Midi(arrayBuffer);
+
+      parts.forEach(p => p.dispose());
+      parts = [];
+
+      Tone.Transport.cancel();
+      Tone.Transport.seconds = 0;
+
+      midiData.tracks.forEach(track => {
+        const part = new Tone.Part((time, note) => {
+          nylonGuitar.triggerAttackRelease(note.name, note.duration, time, note.velocity);
+        }, track.notes).start(0);
+        parts.push(part);
+      });
+    });
+
+    playBtn.addEventListener('click', async () => {
+      if (!midiData) {
+        alert("Please select a MIDI file first.");
+        return;
+      }
+      if (!samplerLoaded) {
+        alert("Guitar samples are still loading. Please wait a moment.");
+        return;
+      }
+
+      await Tone.start();
+      if (Tone.Transport.state !== 'started') {
+        Tone.Transport.start();
+      } else {
+        Tone.Transport.resume();
+      }
+    });
+
+    pauseBtn.addEventListener('click', () => {
+      if (Tone.Transport.state === 'started') {
+        Tone.Transport.pause();
+      }
+    });
+
+    stopBtn.addEventListener('click', () => {
+      Tone.Transport.stop();
+      Tone.Transport.seconds = 0;
+    });
+  </script>
 </body>
 </html>
