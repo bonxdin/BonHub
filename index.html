@@ -1,18 +1,74 @@
 <!DOCTYPE html>
 <html>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.35/Tone.min.js"></script>
 <head>
   <meta charset="UTF-8">
-  <title>Play MIDI with Nylon Guitar</title>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.35/Tone.min.js"></script>
+  <title>Tính tẩu</title>
 </head>
 <body>
+  <div class="Home_column">
+	<img src="tinhtau.png" alt="Tính tẩu" style="height: 945px;z-index: 0">
+	<div id="instrumentkey">
+		<img id="keyin" src="pluckin.png" alt="" style="top: 243px;left: 104px;">
+		<img id="keyout" src="pluckout.png" alt="" style="top: 432px;left: 84px;">
+	</div>
+  </div>
+
+  <div id="keyD4">D4</div>
+  <div id="keyG3">G3</div>
+  <div id="keyG4">G4</div>
+  <div id="string"></div>
+  <div class="Home_column">
+  <img src="bonhub.png" alt="Tính tẩu" style="height: 155px;">
   <h1>Hai ru̱ng quang</h1>
   <!-- <input type="file" id="midiInput" accept=".mid,.midi"><br><br>-->
-  <button id="playBtn">▶️</button>
-  <button id="pauseBtn">⏸️</button>
+  <button id="playBtn">⏯️</button>
   <button id="stopBtn">⏹️</button>
+  </div>
 
-  <script type="module">
+</body>
+
+<style>
+    body {
+		padding: 0;margin: 0;color: #fff;background: #000;
+		font-family: sans-serif;
+    }
+	button {
+		background: none;border: none;font-size: 1.5rem;
+	}
+	.Home_column {float: left;width: fit-content;
+		}
+	#instrumentkey img {position: absolute;height: 20px;z-index:5;display: none; }
+	#keyD4 {position: absolute;top: 77px;left: 45px}
+	#keyG3 {position: absolute;top: 77px;left: 85px; color: #000}
+	#keyG4 {position: absolute;top: 77px;left: 125px}
+	#string {position: absolute;width: 3px;height: 643px;top: 181px;left: 89px;z-index: 1;background: #0c469d;display: none; }
+</style>
+<script>
+const MUSICNOTES = ["C","C#","D","D#","E","F","F#","G","G#","A","A#","B"];
+var currentnote = ["D4","G3","G4"];
+var sheet = "2D516 0B408 0A408 2D532 0A408 2D508 0B408 0A408 2G416 0E408 2G408 0D432 2D508 0A408 2D516 0A408 2D508 0B408 2G408 0A432 0A412 0B404 0A408 0B408 2D508 2E508 2D516 0A408 2D508 0B408 0A408 2G432 2G412 0A404 0B408 2D508 0A412 2G404 0E408 2G408 0D416 0E408 2G408 0D432 2D516 0B408 0A408 2D532 0A408 2D508 0B408 0A408 2G416 0E408 2G408 0D432 2D508 0A408 2D516 0A408 2D508 0B408 2G408 0A432 0A412 0B404 0A408 0B408 2D508 2E508 2D516 0A408 2D508 0B408 0A408 2G432 2G412 0A404 0B408 2D508 0A412 2G404 0E408 2G408 0D416 0E408 2G408 0D432".split(" ");
+var isheet=0;
+function showKeyFor(keyleft, keytop, durationMs) {
+  const img = document.getElementById("keyin");
+  const str = document.getElementById("string");
+  if (!img) return;
+
+  img.style["left"] = keyleft + "px";
+  img.style["top"] = keytop + "px";
+  img.style.display = "block"; // show the image
+  
+  str.style["left"] = keyleft+5 + "px";
+  str.style.display = "block";
+
+  setTimeout(() => {
+    img.style.display = "none";
+    str.style.display = "none"; // hide it after the given time
+  }, durationMs);
+}
+</script>
+<script type="module">
+
     import { Midi } from "https://cdn.jsdelivr.net/npm/@tonejs/midi@2.0.27/+esm";
 
     //const midiInput = document.getElementById('midiInput');
@@ -79,45 +135,43 @@
       Tone.Transport.cancel();
       Tone.Transport.seconds = 0;
 
-      midiData.tracks.forEach(track => {
+	  midiData.tracks.forEach(track => {
         const part = new Tone.Part((time, note) => {
-          nylonGuitar.triggerAttackRelease(note.name, note.duration, time, note.velocity);
-		  console.log(note.name);
+          //nylonGuitar.triggerAttackRelease(note.name, note.duration, time, note.velocity);
+		  var keyspace = 0.5**((MUSICNOTES.indexOf(sheet[isheet].slice(1, -3))-MUSICNOTES.indexOf(currentnote[sheet[isheet].substring(0,1)].slice(0, -1))+12*(sheet[isheet].slice(2,-2)-currentnote[sheet[isheet].substring(0,1)].slice(-1)))/12);
+		  showKeyFor(84+9*sheet[isheet].substring(0,1), Math.round(814-643*keyspace), 40*sheet[isheet].slice(-2));
+		  nylonGuitar.triggerAttackRelease(sheet[isheet].slice(1, -2), note.duration, time, note.velocity);
+		  isheet++;
         }, track.notes).start(0);
         parts.push(part);
       });
 
-      console.log("MIDI file 'sofa.mid' loaded.");
+      console.log("MIDI file loaded.");
     }
 	
     playBtn.addEventListener('click', async () => {
       if (!midiData) {
-        alert("Please select a MIDI file first.");
+        alert("MIDI file is still loading.");
         return;
       }
       if (!samplerLoaded) {
-        alert("Guitar samples are still loading. Please wait a moment.");
+        alert("Samples are still loading. Please wait a moment.");
         return;
       }
 
       await Tone.start();
-      if (Tone.Transport.state !== 'started') {
-        Tone.Transport.start();
-      } else {
-        Tone.Transport.resume();
-      }
-    });
-
-    pauseBtn.addEventListener('click', () => {
       if (Tone.Transport.state === 'started') {
         Tone.Transport.pause();
+      }
+        else if (Tone.Transport.state !== 'started') {
+        Tone.Transport.start();
       }
     });
 
     stopBtn.addEventListener('click', () => {
+	  isheet = 0;
       Tone.Transport.stop();
       Tone.Transport.seconds = 0;
     });
-  </script>
-</body>
+</script>
 </html>
