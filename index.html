@@ -3,7 +3,7 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.35/Tone.min.js"></script>
 <head>
   <meta charset="UTF-8">
-  <title>Tính tẩu</title>
+  <title>叮斗</title>
 </head>
 <body>
   <div class="Home_column">
@@ -20,11 +20,11 @@
   <div id="string"></div>
   <div class="Home_column">
   <img src="bonhub.png" alt="Tính tẩu" style="height: 155px;">
-  <h1>Hai ru̱ng quang</h1>
+  <h1>胲𭦄光 - Hai ru̱ng quang</h1>
+  <button id="playPauseBtn" onclick="togglePlayback()">▶</button>
+  <button onclick="stopPlayback()">◼</button>
+  <div id="currentNote">—</div>
   <!-- <input type="file" id="midiInput" accept=".mid,.midi"><br><br>-->
-  <button id="playBtn">⏯️</button>
-  <button id="stopBtn">⏹️</button>
-  </div>
 
 </body>
 
@@ -33,8 +33,9 @@
 		padding: 0;margin: 0;color: #fff;background: #000;
 		font-family: sans-serif;
     }
+	h1 {font-family: Lexend, "Leelawadee UI", Tahoma, "Tai Lanna", "Cambria Tai Yo", "Lanexang Mon4", "Microsoft New Tai Lue", sans-serif, "Tai Son La", TaiViet, "Segoe Ahom Print", "Helvetica Neue", Helvetica, Arial, HanaMinA, HanaMinB, SimSun, SimSun-ExtB, SimSun-ExtG, "Malgun Gothic", "BabelStone Han", Sawndip, Sukhothai, "Nom Na Tong", "Han-Nom Gothic Supplement";}
 	button {
-		background: none;border: none;font-size: 1.5rem;
+		background: #eee;border: none;font-size: 1.5rem; height: 32px; width: 32px;
 	}
 	.Home_column {float: left;width: fit-content;
 		}
@@ -42,46 +43,15 @@
 	#keyD4 {position: absolute;top: 77px;left: 45px}
 	#keyG3 {position: absolute;top: 77px;left: 85px; color: #000}
 	#keyG4 {position: absolute;top: 77px;left: 125px}
-	#string {position: absolute;width: 3px;height: 643px;top: 181px;left: 89px;z-index: 1;background: #0c469d;display: none; }
+	#string {position: absolute;width: 3px;height: 643px;top: 181px;left: 89px;z-index: 1;background: #2d67af;display: none; }
+	#currentNote {position: absolute;top: 814px;left: 30px; color: #000}
 </style>
 <script>
 const MUSICNOTES = ["C","C#","D","D#","E","F","F#","G","G#","A","A#","B"];
 var currentnote = ["D4","G3","G4"];
 var sheet = "2D516 0B408 0A408 2D532 0A408 2D508 0B408 0A408 2G416 0E408 2G408 0D432 2D508 0A408 2D516 0A408 2D508 0B408 2G408 0A432 0A412 0B404 0A408 0B408 2D508 2E508 2D516 0A408 2D508 0B408 0A408 2G432 2G412 0A404 0B408 2D508 0A412 2G404 0E408 2G408 0D416 0E408 2G408 0D432 2D516 0B408 0A408 2D532 0A408 2D508 0B408 0A408 2G416 0E408 2G408 0D432 2D508 0A408 2D516 0A408 2D508 0B408 2G408 0A432 0A412 0B404 0A408 0B408 2D508 2E508 2D516 0A408 2D508 0B408 0A408 2G432 2G412 0A404 0B408 2D508 0A412 2G404 0E408 2G408 0D416 0E408 2G408 0D432".split(" ");
 var isheet=0;
-function showKeyFor(keyleft, keytop, durationMs) {
-  const img = document.getElementById("keyin");
-  const str = document.getElementById("string");
-  if (!img) return;
-
-  img.style["left"] = keyleft + "px";
-  img.style["top"] = keytop + "px";
-  img.style.display = "block"; // show the image
-  
-  str.style["left"] = keyleft+5 + "px";
-  str.style.display = "block";
-
-  setTimeout(() => {
-    img.style.display = "none";
-    str.style.display = "none"; // hide it after the given time
-  }, durationMs);
-}
-</script>
-<script type="module">
-
-    import { Midi } from "https://cdn.jsdelivr.net/npm/@tonejs/midi@2.0.27/+esm";
-
-    //const midiInput = document.getElementById('midiInput');
-    const playBtn = document.getElementById('playBtn');
-    const pauseBtn = document.getElementById('pauseBtn');
-    const stopBtn = document.getElementById('stopBtn');
-
-    let midiData = null;
-    let parts = [];
-    let samplerLoaded = false;
-
-    // Nylon guitar sample map (can be extended with more notes)
-    const nylonGuitar = new Tone.Sampler({
+const tinhtau = new Tone.Sampler({
       urls: {
         "E3": "E3.mp3",
         "G3": "G3.mp3",
@@ -98,80 +68,82 @@ function showKeyFor(keyleft, keytop, durationMs) {
       baseUrl: "https://gleitz.github.io/midi-js-soundfonts/FluidR3_GM/acoustic_guitar_nylon-mp3/",
       onload: () => {
         samplerLoaded = true;
-        console.log("Nylon guitar samples loaded.");
+        console.log("Tính tẩu loaded.");
 		loadAndParseMIDI(); // Load the MIDI file after samples are ready
       }
-    }).toDestination();
-/*
-    midiInput.addEventListener('change', async (e) => {
-      const file = e.target.files[0];
-      if (!file) return;
+}).toDestination();
 
-      const arrayBuffer = await file.arrayBuffer();
-      midiData = new Midi(arrayBuffer);
+    let scheduledEvents = [];
+    let isStarted = false;
+    let isPlaying = false;
+function showKeyFor(keyleft, keytop, durationS) {
+  const img = document.getElementById("keyin");
+  const str = document.getElementById("string");
+  if (!img) return;
 
-      parts.forEach(p => p.dispose());
-      parts = [];
+  img.style["left"] = keyleft + "px";
+  img.style["top"] = keytop + "px";
+  img.style.display = "block"; // show the image
+  
+  str.style["left"] = keyleft+5 + "px";
+  str.style.display = "block";
 
-      Tone.Transport.cancel();
-      Tone.Transport.seconds = 0;
+  setTimeout(() => {
+    img.style.display = "none";
+    str.style.display = "none"; // hide it after the given time
+  }, durationS*800);
+}
 
-      midiData.tracks.forEach(track => {
-        const part = new Tone.Part((time, note) => {
-          nylonGuitar.triggerAttackRelease(note.name, note.duration, time, note.velocity);
-        }, track.notes).start(0);
-        parts.push(part);
+	async function togglePlayback() {
+      const btn = document.getElementById('playPauseBtn');
+      await Tone.start();
+
+      if (!isStarted) {
+        scheduleSequence();
+        isStarted = true;
+      }
+      if (!isPlaying) {
+        Tone.Transport.start();
+        isPlaying = true;
+        btn.textContent = "❚❚";
+      } else {
+        Tone.Transport.pause();
+        isPlaying = false;
+        btn.textContent = "▶";
+      }
+    }
+
+function scheduleSequence() {
+      let currentTime = 0;
+
+      sheet.forEach(note => {
+		var duro = 0.04*note.slice(-2);
+		
+		var keyspace = 0.5**((MUSICNOTES.indexOf(note.slice(1, -3))-MUSICNOTES.indexOf(currentnote[note.substring(0,1)].slice(0, -1))+12*(note.slice(2,-2)-currentnote[note.substring(0,1)].slice(-1)))/12);
+        const id = Tone.Transport.schedule((time) => {
+		  showKeyFor(84+9*note.substring(0,1), Math.round(814-643*keyspace), duro);
+          tinhtau.triggerAttackRelease(note.slice(1, -2), duro, time);
+		  showCurrentNote(note.slice(1, -2));
+        }, currentTime);
+
+        scheduledEvents.push(id);		
+        currentTime += duro;
+      console.log(note);
       });
-    });
-*/
-	async function loadAndParseMIDI() {
-      const response = await fetch("sofa.mid");
-      const arrayBuffer = await response.arrayBuffer();
-      midiData = new Midi(arrayBuffer);
-
-      parts.forEach(p => p.dispose());
-      parts = [];
-
+}
+	
+    function stopPlayback() {
+      Tone.Transport.stop();
       Tone.Transport.cancel();
-      Tone.Transport.seconds = 0;
-
-	  midiData.tracks.forEach(track => {
-        const part = new Tone.Part((time, note) => {
-          //nylonGuitar.triggerAttackRelease(note.name, note.duration, time, note.velocity);
-		  var keyspace = 0.5**((MUSICNOTES.indexOf(sheet[isheet].slice(1, -3))-MUSICNOTES.indexOf(currentnote[sheet[isheet].substring(0,1)].slice(0, -1))+12*(sheet[isheet].slice(2,-2)-currentnote[sheet[isheet].substring(0,1)].slice(-1)))/12);
-		  showKeyFor(84+9*sheet[isheet].substring(0,1), Math.round(814-643*keyspace), 40*sheet[isheet].slice(-2));
-		  nylonGuitar.triggerAttackRelease(sheet[isheet].slice(1, -2), note.duration, time, note.velocity);
-		  isheet++;
-        }, track.notes).start(0);
-        parts.push(part);
-      });
-
-      console.log("MIDI file loaded.");
+      scheduledEvents = [];
+      isStarted = false;
+      isPlaying = false;
+      document.getElementById('playPauseBtn').textContent = "▶";
+      showCurrentNote("—");
     }
 	
-    playBtn.addEventListener('click', async () => {
-      if (!midiData) {
-        alert("MIDI file is still loading.");
-        return;
-      }
-      if (!samplerLoaded) {
-        alert("Samples are still loading. Please wait a moment.");
-        return;
-      }
-
-      await Tone.start();
-      if (Tone.Transport.state === 'started') {
-        Tone.Transport.pause();
-      }
-        else if (Tone.Transport.state !== 'started') {
-        Tone.Transport.start();
-      }
-    });
-
-    stopBtn.addEventListener('click', () => {
-	  isheet = 0;
-      Tone.Transport.stop();
-      Tone.Transport.seconds = 0;
-    });
+	function showCurrentNote(note) {
+      document.getElementById('currentNote').textContent = `${note}`;
+    }
 </script>
 </html>
