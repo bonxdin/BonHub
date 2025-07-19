@@ -17,9 +17,9 @@
     <div id="string"></div>
   </div>
 
-  <div id="keyD4">D4</div>
-  <div id="keyG3">G3</div>
-  <div id="keyG4">G4</div>
+  <div id="keyD4">D3</div>
+  <div id="keyG3">G2</div>
+  <div id="keyG4">G3</div>
   <div class="Home_column">
   <img src="bonhub.png" alt="Tính tẩu" style="height: 155px;">
   <h1>胲𭦄光 - Hai ru̱ng quang</h1>
@@ -50,11 +50,15 @@
 </style>
 <script>
 const MUSICNOTES = ["C","C#","D","D#","E","F","F#","G","G#","A","A#","B"];
-var currentnote = ["D4","G3","G4"];
-var sheet = "+2D516 +0B4~A416 +2D5~E532 +0A412 -2D504 +0B408 +0A408 +2G416 +0E408 +2G408 +0D432 +2D508 +0A408 +2D516 +0A408 +2D508 +0B408 +2G408 +0A432 +0A412 +0B404 +0A408 +0B408 +2D508 +2E508 +2D516 +0A408 +2D508 +0B4~A416 +2G432 +2G412 +0A404 +0B408 +2D5~E508 +0A412 +2G404 +0E408 +2G408 +0D416 +0E408 +2G408 +0D432 +2D516 +0B408 +0A408 +2D532 +0A408 +2D508 +0B408 +0A408 +2G416 +0E408 +2G408 +0D432 +2D508 +0A408 +2D516 +0A408 +2D508 +0B408 +2G408 +0A432 +0A412 +0B404 +0A408 +0B408 +2D508 +2E508 +2D516 +0A408 +2D508 +0B408 +0A408 +2G432 +2G412 +0A404 +0B408 +2D508 +0A412 +2G404 +0E408 +2G408 +0D416 +0E408 +2G408 +0D432".split(" ");
+var currentnote = ["D3","G2","G3"];
+var sheet = "+2D416 +0B3~A316 +2D4~E432 +0A312 -2D404 +0B308 +0A308 +2G316 +0E308 +2G308 +0D332 +2D408 +0A308 +2D416 +0A308 +2D408 +0B308 +2G308 +0A332 +0A312 +0B304 +0A308 +0B308 +2D408 +2E408 +2D416 +0A308 +2D408 +0B3~A316 +2G332 +2G312 +0A304 +0B308 +2D4~E408 +0A312 +2G304 +0E308 +2G308 +0D316 +0E308 +2G308 +0D332 +2D416 +0B308 +0A308 +2D432 +0A308 +2D408 +0B308 +0A308 +2G316 +0E308 +2G308 +0D332 +2D408 +0A308 +2D416 +0A308 +2D408 +0B308 +2G308 +0A332 +0A312 +0B304 +0A308 +0B308 +2D408 +2E408 +2D416 +0A308 +2D408 +0B308 +0A308 +2G332 +2G312 +0A304 +0B308 +2D408 +0A312 +2G304 +0E308 +2G308 +0D316 +0E308 +2G308 +0D332".split(" ");
 var isheet=0;
 const tinhtau = new Tone.Sampler({
       urls: {
+        "C3": "C3.mp3",
+        "E3": "E3.mp3",
+        "G3": "G3.mp3",
+        "A3": "A3.mp3",
         "C3": "C3.mp3",
         "E3": "E3.mp3",
         "G3": "G3.mp3",
@@ -63,10 +67,6 @@ const tinhtau = new Tone.Sampler({
         "E4": "E4.mp3",
         "G4": "G4.mp3",
         "A4": "A4.mp3",
-        "C5": "C5.mp3",
-        "E5": "E5.mp3",
-        "G5": "G5.mp3",
-        "A5": "A5.mp3",
         "C6": "C6.mp3",
         "E6": "E6.mp3",
         "G6": "G6.mp3",
@@ -244,7 +244,7 @@ function noteToMidi(note) {
   return MUSICNOTES.indexOf(pitch.toUpperCase()) + 12 * (parseInt(octave) + 1);
 }
 
-    // Load a base sample (e.g., C4.mp3 = MIDI 60)
+    // Load a base sample (e.g., C3.mp3 = MIDI 60)
     async function loadSample() {
       const resp = await fetch('./acoustic_guitar_nylon-mp3/C4.mp3');
       const arrayBuffer = await resp.arrayBuffer();
@@ -270,7 +270,7 @@ function noteToMidi(note) {
       const rate = source.playbackRate;
       const now = ac.currentTime;
 
-      const baseNote = 60; // sample is C4
+      const baseNote = 60; // sample is C3
       const startRate = startFreq / midiToFreq(baseNote);
       const endRate = endFreq / midiToFreq(baseNote);
 
