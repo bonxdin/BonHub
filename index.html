@@ -1,6 +1,6 @@
 <!DOCTYPE html>
 <html>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.35/Tone.min.js"></script>
+<script src="Tone.js"></script>
 <head>
   <meta charset="UTF-8">
   <title>叮斗</title>
@@ -11,13 +11,15 @@
 	<div id="instrumentkey">
 		<img id="keyin" src="pluckin.png" alt="" style="top: 243px;left: 104px;">
 		<img id="keyout" src="pluckout.png" alt="" style="top: 432px;left: 84px;">
+		<img id="keyin2" src="pluckin.png" alt="" style="top: 243px;left: 104px;">
+		<img id="keyout2" src="pluckout.png" alt="" style="top: 432px;left: 84px;">
 	</div>
+    <div id="string"></div>
   </div>
 
   <div id="keyD4">D4</div>
   <div id="keyG3">G3</div>
   <div id="keyG4">G4</div>
-  <div id="string"></div>
   <div class="Home_column">
   <img src="bonhub.png" alt="Tính tẩu" style="height: 155px;">
   <h1>胲𭦄光 - Hai ru̱ng quang</h1>
@@ -25,7 +27,6 @@
   <button onclick="stopPlayback()">◼</button>
   <div id="currentNote">—</div>
   <!-- <input type="file" id="midiInput" accept=".mid,.midi"><br><br>-->
-
 </body>
 
 <style>
@@ -43,29 +44,35 @@
 	#keyD4 {position: absolute;top: 77px;left: 45px}
 	#keyG3 {position: absolute;top: 77px;left: 85px; color: #000}
 	#keyG4 {position: absolute;top: 77px;left: 125px}
-	#string {position: absolute;width: 3px;height: 643px;top: 181px;left: 89px;z-index: 1;background: #2d67af;display: none; }
-	#currentNote {position: absolute;top: 814px;left: 30px; color: #000}
+	#string {position: absolute;width: 3px;height: 643px;top: 181px;left: 89px;z-index: 1;background: #2d67af;display: none;}
+	#currentNote {position: absolute;top: 690px;left: 10px; color: #fff}
+}
 </style>
 <script>
 const MUSICNOTES = ["C","C#","D","D#","E","F","F#","G","G#","A","A#","B"];
 var currentnote = ["D4","G3","G4"];
-var sheet = "2D516 0B408 0A408 2D532 0A408 2D508 0B408 0A408 2G416 0E408 2G408 0D432 2D508 0A408 2D516 0A408 2D508 0B408 2G408 0A432 0A412 0B404 0A408 0B408 2D508 2E508 2D516 0A408 2D508 0B408 0A408 2G432 2G412 0A404 0B408 2D508 0A412 2G404 0E408 2G408 0D416 0E408 2G408 0D432 2D516 0B408 0A408 2D532 0A408 2D508 0B408 0A408 2G416 0E408 2G408 0D432 2D508 0A408 2D516 0A408 2D508 0B408 2G408 0A432 0A412 0B404 0A408 0B408 2D508 2E508 2D516 0A408 2D508 0B408 0A408 2G432 2G412 0A404 0B408 2D508 0A412 2G404 0E408 2G408 0D416 0E408 2G408 0D432".split(" ");
+var sheet = "+2D516 +0B4~A416 +2D5~E532 +0A412 -2D504 +0B408 +0A408 +2G416 +0E408 +2G408 +0D432 +2D508 +0A408 +2D516 +0A408 +2D508 +0B408 +2G408 +0A432 +0A412 +0B404 +0A408 +0B408 +2D508 +2E508 +2D516 +0A408 +2D508 +0B4~A416 +2G432 +2G412 +0A404 +0B408 +2D5~E508 +0A412 +2G404 +0E408 +2G408 +0D416 +0E408 +2G408 +0D432 +2D516 +0B408 +0A408 +2D532 +0A408 +2D508 +0B408 +0A408 +2G416 +0E408 +2G408 +0D432 +2D508 +0A408 +2D516 +0A408 +2D508 +0B408 +2G408 +0A432 +0A412 +0B404 +0A408 +0B408 +2D508 +2E508 +2D516 +0A408 +2D508 +0B408 +0A408 +2G432 +2G412 +0A404 +0B408 +2D508 +0A412 +2G404 +0E408 +2G408 +0D416 +0E408 +2G408 +0D432".split(" ");
 var isheet=0;
 const tinhtau = new Tone.Sampler({
       urls: {
+        "C3": "C3.mp3",
         "E3": "E3.mp3",
         "G3": "G3.mp3",
+        "A3": "A3.mp3",
         "C4": "C4.mp3",
         "E4": "E4.mp3",
         "G4": "G4.mp3",
+        "A4": "A4.mp3",
         "C5": "C5.mp3",
         "E5": "E5.mp3",
         "G5": "G5.mp3",
+        "A5": "A5.mp3",
         "C6": "C6.mp3",
         "E6": "E6.mp3",
         "G6": "G6.mp3",
+        "A6": "A6.mp3",
       },
-      baseUrl: "https://gleitz.github.io/midi-js-soundfonts/FluidR3_GM/acoustic_guitar_nylon-mp3/",
+      baseUrl: "./acoustic_guitar_nylon-mp3/",
       onload: () => {
         samplerLoaded = true;
         console.log("Tính tẩu loaded.");
@@ -76,21 +83,76 @@ const tinhtau = new Tone.Sampler({
     let scheduledEvents = [];
     let isStarted = false;
     let isPlaying = false;
-function showKeyFor(keyleft, keytop, durationS) {
-  const img = document.getElementById("keyin");
-  const str = document.getElementById("string");
+function showKeyFor(keyleft, keytop, pluck, durationS) {
+  const strg = document.getElementById("string");
+  var img;
+  switch (pluck) {
+  case "+":
+	img = document.getElementById("keyin");
+	strg.style["background"] = "#c94086";
+	break;
+  case "-":
+	img = document.getElementById("keyout");
+	strg.style["background"] = "#2d67af";
+	break;
+  }
   if (!img) return;
 
   img.style["left"] = keyleft + "px";
   img.style["top"] = keytop + "px";
   img.style.display = "block"; // show the image
   
-  str.style["left"] = keyleft+5 + "px";
-  str.style.display = "block";
+  strg.style["left"] = keyleft+5 + "px";
+  strg.style["top"] = keytop+10 + "px";
+  strg.style["height"] = 814-keytop + "px";
+  strg.style.display = "block";
 
   setTimeout(() => {
     img.style.display = "none";
-    str.style.display = "none"; // hide it after the given time
+    strg.style.display = "none"; // hide it after the given time
+  }, durationS*800);
+}
+function showKeyBendFor(keyleft, keytop1, keytop2, pluck, durationS) {
+  const strg = document.getElementById("string");
+  var img1, img2;
+  if (keytop1 > keytop2) {
+	var keytop = keytop2;
+	var deg = 180;
+  } else {
+	var keytop = keytop1;
+	var deg = 0;
+  }
+  switch (pluck) {
+  case "+":
+	img1 = document.getElementById("keyin");
+	img2 = document.getElementById("keyin2");
+	strg.style["background"] = "linear-gradient("+deg+"deg,#c94086, #fff)";
+	break;
+  case "-":
+	img1 = document.getElementById("keyout");
+	img2 = document.getElementById("keyout2");
+	strg.style["background"] = "linear-gradient("+deg+"deg,#2d67af, #fff)";
+	break;
+  }
+  if (!img1) return;
+  if (!img2) return;
+
+  img1.style["left"] = keyleft + "px";
+  img1.style["top"] = keytop1 + "px";
+  img1.style.display = "block"; // show the image
+  img2.style["left"] = keyleft + "px";
+  img2.style["top"] = keytop2 + "px";
+  img2.style.display = "block"; // show the image
+  
+  strg.style["left"] = keyleft+5 + "px";
+  strg.style["top"] = keytop+10 + "px";
+  strg.style["height"] = Math.abs(keytop2-keytop1) + "px";
+  strg.style.display = "block";
+
+  setTimeout(() => {
+    img1.style.display = "none";
+    img2.style.display = "none";
+    strg.style.display = "none"; // hide it after the given time
   }, durationS*800);
 }
 
@@ -114,20 +176,44 @@ function showKeyFor(keyleft, keytop, durationS) {
     }
 
 function scheduleSequence() {
-      let currentTime = 0;
+	let currentTime = 0;
 
-      sheet.forEach(note => {
-		var duro = 0.04*note.slice(-2);
+	sheet.forEach(note => {
+	  var pluck = note.substring(0,1);
+	  var duro = 0.04*note.slice(-2);
+	  var stringno = note.substring(1,2);
+	  var notevar = note.slice(2, -2).split("~");
+	  if (notevar.length==2) {
+		var octave1 = notevar[0].slice(-1);
+		var notename1 = notevar[0].slice(0,-1);
+		var octave2 = notevar[1].slice(-1);
+		var notename2 = notevar[1].slice(0,-1);
 		
-		var keyspace = 0.5**((MUSICNOTES.indexOf(note.slice(1, -3))-MUSICNOTES.indexOf(currentnote[note.substring(0,1)].slice(0, -1))+12*(note.slice(2,-2)-currentnote[note.substring(0,1)].slice(-1)))/12);
+		var keyspace1 = 0.5**((MUSICNOTES.indexOf(notename1)-MUSICNOTES.indexOf(currentnote[stringno].slice(0, -1))+12*(octave1-currentnote[stringno].slice(-1)))/12);
+		var keyspace2 = 0.5**((MUSICNOTES.indexOf(notename2)-MUSICNOTES.indexOf(currentnote[stringno].slice(0, -1))+12*(octave2-currentnote[stringno].slice(-1)))/12);
         const id = Tone.Transport.schedule((time) => {
-		  showKeyFor(84+9*note.substring(0,1), Math.round(814-643*keyspace), duro);
-          tinhtau.triggerAttackRelease(note.slice(1, -2), duro, time);
-		  showCurrentNote(note.slice(1, -2));
+		  showKeyBendFor(84+9*stringno, Math.round(814-643*keyspace1), Math.round(814-643*keyspace2), pluck, duro);
+          playPitchBend(notevar[0], notevar[1], duro);
+		  showCurrentNote(notevar[0] + "~" + notevar[1]);
+        }, currentTime);
+		
+        scheduledEvents.push(id);		
+        currentTime += duro;
+	    
+	  } else if (notevar.length==1) {		
+		var octave = notevar[0].slice(-1);
+		var notename = notevar[0].slice(0,-1);
+		
+		var keyspace = 0.5**((MUSICNOTES.indexOf(notename)-MUSICNOTES.indexOf(currentnote[stringno].slice(0, -1))+12*(octave-currentnote[stringno].slice(-1)))/12);
+        const id = Tone.Transport.schedule((time) => {
+		  showKeyFor(84+9*stringno, Math.round(814-643*keyspace), pluck, duro);
+          tinhtau.triggerAttackRelease(notevar[0], duro, time);
+		  showCurrentNote(notevar[0]);
         }, currentTime);
 
         scheduledEvents.push(id);		
         currentTime += duro;
+	  }
       console.log(note);
       });
 }
@@ -145,5 +231,56 @@ function scheduleSequence() {
 	function showCurrentNote(note) {
       document.getElementById('currentNote').textContent = `${note}`;
     }
-</script>
+
+    const AudioContext = window.AudioContext || window.webkitAudioContext;
+    const ac = new AudioContext();
+    let buffer = null;
+
+    // MIDI note numbers
+function noteToMidi(note) {
+  const match = note.match(/^([A-G]#?)(\d)$/);
+  if (!match) return null;
+  const [_, pitch, octave] = match;
+  return MUSICNOTES.indexOf(pitch.toUpperCase()) + 12 * (parseInt(octave) + 1);
+}
+
+    // Load a base sample (e.g., C4.mp3 = MIDI 60)
+    async function loadSample() {
+      const resp = await fetch('./acoustic_guitar_nylon-mp3/C4.mp3');
+      const arrayBuffer = await resp.arrayBuffer();
+      buffer = await ac.decodeAudioData(arrayBuffer);
+    }
+    loadSample();
+
+    function midiToFreq(midi) {
+      return 440 * Math.pow(2, (midi - 69) / 12);
+    }
+
+    function playPitchBend(startNote, endNote, duration) {
+      if (!buffer) return alert("Sample not loaded!");
+
+      const source = ac.createBufferSource();
+      source.buffer = buffer;
+      source.loop = false;
+
+      const startFreq = midiToFreq(noteToMidi(startNote));
+      const endFreq = midiToFreq(noteToMidi(endNote));
+
+      // Use playbackRate to shift pitch from start → end
+      const rate = source.playbackRate;
+      const now = ac.currentTime;
+
+      const baseNote = 60; // sample is C4
+      const startRate = startFreq / midiToFreq(baseNote);
+      const endRate = endFreq / midiToFreq(baseNote);
+
+      rate.setValueAtTime(startRate, now);
+      rate.setValueAtTime(startRate, now + duration/3);
+      rate.linearRampToValueAtTime(endRate, now + duration/2);
+
+      source.connect(ac.destination);
+      source.start(now);
+      source.stop(now + duration);
+    }
+  </script>
 </html>
