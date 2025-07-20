@@ -27,6 +27,10 @@
   <button onclick="stopPlayback()">◼</button>
   <div id="currentNote">—</div>
   <!-- <input type="file" id="midiInput" accept=".mid,.midi"><br><br>-->
+  <div>
+  <br>
+	<textarea id="mussheet">-2G308 +2G308 -2G308 +2C4~D408 -2D408 +2C408 +2C404 -2C404 +2C408 -2C408 +2C408 -2C408 +2C4~D408 -2C408 +2C4~A308 +2A304 -2A304 +2A308 -2G308 +2A308 +2G304 -2G304 +0F308 -2G308 +2G308 -2G308 +2A308 -2A3~C408 +2A308 +2G304 -2G304 +0F308 -2G308 +0F3~D308 +0D304 -0D304 +0D308 -1C308 +0D308 +1C304 -1C304 +0D308 -0F308 +2G308 -2G308 +2A308 -2C408 +2A308 +2G304 -2G304 +0F308 -2G308 +2G308 +2G304 -2G304 +2G308 -1C308 +0D308 +1C304 -1C304 +0D308 -0F308 +2G308 -2G308 +2A308 -2C408 +2A308 +2G304 -2G304 +0F308 -2G308 +2G308 +2G304 -2G304 +2G308</textarea>
+  </div>
 </body>
 
 <style>
@@ -36,7 +40,7 @@
     }
 	h1 {font-family: Lexend, "Leelawadee UI", Tahoma, "Tai Lanna", "Cambria Tai Yo", "Lanexang Mon4", "Microsoft New Tai Lue", sans-serif, "Tai Son La", TaiViet, "Segoe Ahom Print", "Helvetica Neue", Helvetica, Arial, HanaMinA, HanaMinB, SimSun, SimSun-ExtB, SimSun-ExtG, "Malgun Gothic", "BabelStone Han", Sawndip, Sukhothai, "Nom Na Tong", "Han-Nom Gothic Supplement";}
 	button {
-		background: #eee;border: none;font-size: 1.5rem; height: 32px; width: 32px;
+		background: #eee;border: none;font-size: 1.5rem; height: 42px; width: 42px;
 	}
 	.Home_column {float: left;width: fit-content;
 		}
@@ -46,12 +50,14 @@
 	#keyG4 {position: absolute;top: 77px;left: 125px}
 	#string {position: absolute;width: 3px;height: 643px;top: 181px;left: 89px;z-index: 1;background: #2d67af;display: none;}
 	#currentNote {position: absolute;top: 690px;left: 10px; color: #fff}
+	#mussheet {width: 720px;height: 540px;resize: none;background: #203864;color: #ffc000;    font-family: sans-serif;font-size: 1rem;}
 }
 </style>
 <script>
 const MUSICNOTES = ["C","C#","D","D#","E","F","F#","G","G#","A","A#","B"];
 var currentnote = ["D3","G2","G3"];
-var sheet = "+2D416 +0B3~A316 +2D4~E432 +0A312 -2D404 +0B308 +0A308 +2G316 +0E308 +2G308 +0D332 +2D408 +0A308 +2D416 +0A308 +2D408 +0B308 +2G308 +0A332 +0A312 +0B304 +0A308 +0B308 +2D408 +2E408 +2D416 +0A308 +2D408 +0B3~A316 +2G332 +2G312 +0A304 +0B308 +2D4~E408 +0A312 +2G304 +0E308 +2G308 +0D316 +0E308 +2G308 +0D332 +2D416 +0B308 +0A308 +2D432 +0A308 +2D408 +0B308 +0A308 +2G316 +0E308 +2G308 +0D332 +2D408 +0A308 +2D416 +0A308 +2D408 +0B308 +2G308 +0A332 +0A312 +0B304 +0A308 +0B308 +2D408 +2E408 +2D416 +0A308 +2D408 +0B308 +0A308 +2G332 +2G312 +0A304 +0B308 +2D408 +0A312 +2G304 +0E308 +2G308 +0D316 +0E308 +2G308 +0D332".split(" ");
+var sheet = document.getElementById("mussheet").value.split(" ");
+const sheetno1 = "+2D416 +0B3~A316 +2D4~E432 +0A312 -2D404 +0B308 +0A308 +2G316 +0E308 +2G308 +0D332 +2D408 +0A308 +2D416 +0A308 +2D408 +0B308 +2G308 +0A332 +0A312 +0B304 +0A308 +0B308 +2D408 +2E408 +2D416 +0A308 +2D408 +0B3~A316 +2G332 +2G312 +0A304 +0B308 +2D4~E408 +0A312 +2G304 +0E308 +2G308 +0D316 +0E308 +2G308 +0D332 +2D416 +0B308 +0A308 +2D432 +0A308 +2D408 +0B308 +0A308 +2G316 +0E308 +2G308 +0D332 +2D408 +0A308 +2D416 +0A308 +2D408 +0B308 +2G308 +0A332 +0A312 +0B304 +0A308 +0B308 +2D408 +2E408 +2D416 +0A308 +2D408 +0B308 +0A308 +2G332 +2G312 +0A304 +0B308 +2D408 +0A312 +2G304 +0E308 +2G308 +0D316 +0E308 +2G308 +0D332";
 var isheet=0;
 const tinhtau = new Tone.Sampler({
       urls: {
@@ -153,7 +159,7 @@ function showKeyBendFor(keyleft, keytop1, keytop2, pluck, durationS) {
     img1.style.display = "none";
     img2.style.display = "none";
     strg.style.display = "none"; // hide it after the given time
-  }, durationS*800);
+  }, durationS*600);
 }
 
 	async function togglePlayback() {
@@ -162,6 +168,7 @@ function showKeyBendFor(keyleft, keytop1, keytop2, pluck, durationS) {
 
       if (!isStarted) {
         scheduleSequence();
+		document.getElementById("mussheet").readOnly = "true";
         isStarted = true;
       }
       if (!isPlaying) {
@@ -177,7 +184,7 @@ function showKeyBendFor(keyleft, keytop1, keytop2, pluck, durationS) {
 
 function scheduleSequence() {
 	let currentTime = 0;
-
+	sheet = document.getElementById("mussheet").value.split(" ")
 	sheet.forEach(note => {
 	  var pluck = note.substring(0,1);
 	  var duro = 0.04*note.slice(-2);
@@ -207,7 +214,7 @@ function scheduleSequence() {
 		var keyspace = 0.5**((MUSICNOTES.indexOf(notename)-MUSICNOTES.indexOf(currentnote[stringno].slice(0, -1))+12*(octave-currentnote[stringno].slice(-1)))/12);
         const id = Tone.Transport.schedule((time) => {
 		  showKeyFor(84+9*stringno, Math.round(814-643*keyspace), pluck, duro);
-          tinhtau.triggerAttackRelease(notevar[0], duro, time);
+          tinhtau.triggerAttackRelease(notevar[0], duro*1.5, time);
 		  showCurrentNote(notevar[0]);
         }, currentTime);
 
@@ -222,6 +229,7 @@ function scheduleSequence() {
       Tone.Transport.stop();
       Tone.Transport.cancel();
       scheduledEvents = [];
+	  document.getElementById("mussheet").removeAttribute('readonly')
       isStarted = false;
       isPlaying = false;
       document.getElementById('playPauseBtn').textContent = "▶";
@@ -280,7 +288,7 @@ function noteToMidi(note) {
 
       source.connect(ac.destination);
       source.start(now);
-      source.stop(now + duration);
+      source.stop(now + duration*1.5);
     }
   </script>
 </html>
